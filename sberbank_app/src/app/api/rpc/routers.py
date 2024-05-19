@@ -12,9 +12,6 @@ from src.app.api.rpc.schemas.responses.errors.validations.transaction_value_nega
 from src.app.api.rpc.views.refill import refill
 from src.app.api.rpc.views.withdraw import withdraw
 
-# from src.app.api.rpc.schemas.responses.errors import (
-# )
-
 
 def add_rpc_routers(app: jsonrpc.API) -> None:
     api_v1: jsonrpc.Entrypoint = jsonrpc.Entrypoint(

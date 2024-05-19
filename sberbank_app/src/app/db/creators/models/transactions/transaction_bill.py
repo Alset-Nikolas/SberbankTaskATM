@@ -39,10 +39,8 @@ class TransactionBillCreator(BaseFactory[TransactionBill]):
         return data_for_create
 
     async def _set_transaction_id(self, kwargs: Dict[str, Any], data_for_create: Dict[str, Any]) -> None:
-        print(kwargs)
         name_field: str = 'transaction_id'
         value = kwargs.get(name_field)
-        print('valuevaluevaluevalue', value)
         transaction: Optional[Transaction] = await Transaction.get_or_none(session=self.session, id_=value)
         if not transaction:
             raise ErrorCreateObject(

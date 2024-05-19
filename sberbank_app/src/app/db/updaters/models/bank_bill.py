@@ -33,7 +33,6 @@ class BankBillUpdater:
 
     async def update(self) -> BankBill:
         self.instance = await BankBill.get_by_id(self.instance_id, session=self.session)
-        print(self.instance)
         self.old_data: BankBillSchema = BankBillSchema.from_orm(self.instance)
         self._update_quantity()
 
