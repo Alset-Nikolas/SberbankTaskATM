@@ -1,0 +1,144 @@
+@startuml
+'https://plantuml.com/sequence-diagram
+
+title "SberbankTaskATM - простейший банкомат"
+participant "Client" as cl
+participant "BankAPI" as bank_api
+
+group Положить деньги (За один раз можно положить несколько купюра одного наминала)
+    cl -> bank_api: POST: /api/v1/jsonrpc
+    note left
+    {   ...
+        "method": "refill",
+        "params": {
+          "denomination": 100,
+          "currency": "RUB",
+          "quantity": 1
+        }
+
+    }
+    end note
+    cl <- bank_api: 200
+    note right
+    {
+       {
+       "result": {
+            "created_at": "2024-05-19T21:06:47.429337",
+            "modified_at": "2024-05-19T21:06:47.429341",
+            "id": "2",
+            "currency_id": 1,
+            "type": "refill"
+          }
+    }
+    end note
+    alt Наминал не [100, 200, 500, 1000, 5000]
+        cl <- bank_api:
+        note right
+        {
+           "error": {
+                "code": 402,
+                "message": "Bill not exist"
+              }
+        }
+        end note
+    else Кол-во купюр <= 0
+        cl <- bank_api:
+        note right
+        {
+            "error": {
+                "code": 403,
+                "message": "Not valid Bill Quantity"
+              }
+        }
+        end note
+    else currency != RUB
+        cl <- bank_api:
+        note right
+        {
+            "error": {
+                "code": 401,
+                "message": "Currency not exist"
+              }
+        }
+        end note
+    end
+end group
+
+group Получить деньги. (Банкомат для заданной суммы выдает массив с номиналом и количеством купюр, в зависимости от доступных купюр в банкомате)
+    cl -> bank_api: POST: /api/v1/jsonrpc
+    note left
+    {   ...
+      "method": "withdraw",
+      "params": {
+        "value": 1800,
+        "currency": "RUB"
+      }
+
+    }
+    end note
+
+    cl <- bank_api: 200
+    note right
+
+    {
+       "result": {
+            "transaction": {
+                "type": "withdraw"
+            },
+            "transaction_bills": [
+                  {
+                        "quantity": 1,
+                        "bill": {
+                            "value": 500
+                        },
+                        "currency": {
+                            "name": "RUB"
+                        }
+                  },
+                  {
+                        "quantity": 1,
+                        "bill": {
+                            "value": 100
+                        },
+                        "currency": {
+                             "name": "RUB"
+                        }
+                  }
+                ]
+            },
+    }
+    end note
+    alt Денег недостаточно
+        cl <- bank_api:
+        note right
+        {
+            "error": {
+                "code": 402,
+                "message": "Not enough bank funds"
+              }
+        }
+        end note
+    else currency != RUB
+        cl <- bank_api:
+        note right
+        {
+            "error": {
+                "code": 401,
+                "message": "Currency not exist"
+              }
+        }
+        end note
+    else value <= 0
+        cl <- bank_api:
+        note right
+        {
+            "error": {
+                "code": 403,
+                "message": "Not valid value"
+              }
+        }
+        end note
+
+    end
+end group
+@enduml

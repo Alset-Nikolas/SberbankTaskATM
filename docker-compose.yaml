@@ -1,0 +1,46 @@
+version: "3"
+services:
+  sberbank_app:
+    build: ./sberbank_app
+    restart: unless-stopped
+    container_name: sberbank.sberbank_app
+    volumes:
+      - ./sberbank_app:/usr/sberbank_app
+    depends_on:
+      sberbank_app_postgres:
+        condition: service_healthy
+    logging:
+      options:
+        max-file: "10"
+        max-size: 10m
+    ports:
+      - "8084:8084"
+    command: [ "sh", "-c", "alembic upgrade heads ; uvicorn asgi:app --host 0.0.0.0 --port 8084" ]
+    environment:
+      - TYPE_ENV=docker
+    env_file:
+      - sberbank_app/.env.docker
+
+
+  sberbank_app_postgres:
+    build: ./postgres
+    restart: unless-stopped
+    container_name: sberbank.sberbank_postgres
+    volumes:
+      - ./data:/var/lib/postgresql/data/
+    ports:
+      - 5466:5432
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=qwerty
+      - POSTGRES_DB=sberbank_task_atm
+    logging:
+      options:
+        max-file: "10"
+        max-size: 10m
+    healthcheck:
+      start_period: 5s
+      interval: 5s
+      retries: 10
+      timeout: 5s
+      test: "pg_isready -q -d sberbank_app -U postgres"
